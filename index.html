@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sushi for Pigeon</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #073e44;
+  color: #fff7e7;
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100dvh;
+  touch-action: none;
+}
+header {
+  position: absolute;
+  top: 22px;
+  left: 26px;
+  right: 26px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+h1 {
+  font-size: clamp(20px, 4vw, 30px);
+  margin: 0;
+  letter-spacing: -1px;
+}
+small {
+  display: block;
+  font-size: 14px;
+  opacity: .7;
+  margin-top: 4px;
+}
+.stats { display: flex; gap: 20px; text-align: center; }
+.stats strong { display: block; font-size: 25px; }
+.stats span { font-size: 12px; letter-spacing: 2px; }
+footer {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, 94%);
+  text-align: center;
+}
+.choices { display: flex; gap: 8px; justify-content: center; }
+button {
+  font: inherit;
+  border: 1px solid #ffffff33;
+  background: #123c3fe8;
+  color: #fff7e7;
+  border-radius: 16px;
+  padding: 12px 20px;
+  cursor: pointer;
+  min-height: 48px;
+}
+button.active {
+  background: #ffcc74;
+  color: #173b3c;
+  border-color: #ffcc74;
+}
+button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+.hint { font-size: 14px; margin: 12px 0; color: #f8f4d5; }
+#toast {
+  position: absolute;
+  top: 24%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+}
+#overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #033c4660;
+  backdrop-filter: blur(5px);
+}
+.card {
+  width: min(440px, 90%);
+  padding: 32px;
+  text-align: center;
+  border-radius: 28px;
+  background: #083d43f2;
+  box-shadow: 0 24px 70px #0004;
+}
+.card h2 { font-size: 36px; letter-spacing: -1.5px; margin: 0 0 14px; }
+.card p { line-height: 1.6; color: #d4e8dd; }
+.card button {
+  background: #ffcc74;
+  color: #103e42;
+  font-weight: 700;
+  width: 100%;
+  margin-top: 12px;
+}
+#mute {
+  position: absolute;
+  right: 20px;
+  bottom: 24px;
+  padding: 9px;
+  font-size: 13px;
+}
+@media (max-width: 650px) {
+  header { left: 16px; right: 16px; }
+  .stats { gap: 12px; }
+  .choices button { padding: 12px 14px; }
+  #mute { right: 12px; bottom: 150px; }
+}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="3D sushi shooting game"></canvas>
+
+<header>
+  <div>
+    <h1>Sushi for Pigeon</h1>
+    <small>A very hungry little bird.</small>
+  </div>
+  <div class="stats">
+    <div><strong id="score">0</strong><span>POINTS</span></div>
+    <div><strong id="time">60</strong><span>SECONDS</span></div>
+  </div>
+</header>
+
+<div id="toast"></div>
+
+<footer>
+  <p class="hint">Aim at the open beak · Tap to toss</p>
+  <div class="choices" aria-label="Choose sushi">
+    <button class="active" data-type="0" aria-pressed="true">🍣 Salmon</button>
+    <button data-type="1" aria-pressed="false">🍤 Shrimp</button>
+    <button data-type="2" aria-pressed="false">🍣 Tuna</button>
+  </div>
+</footer>
+
+<button id="mute" aria-pressed="false">Sound off</button>
+
+<div id="overlay">
+  <div class="card">
+    <small>THE SUSHI COUNTER</small>
+    <h2 id="title">Lunch is airborne.</h2>
+    <p id="intro">
+      Feed this round little pigeon! Choose salmon, shrimp, or tuna.
+      Aim at its open mouth, then tap to launch.
+    </p>
+    <button id="start">Let's feed the pigeon</button>
+    <p style="font-size:13px">
+      Phone: tap to aim &amp; shoot<br>
+      Computer: mouse to aim, click or Space to shoot<br>
+      Keys 1, 2, 3 select sushi
+    </p>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const canvas = document.querySelector('#game');
+const ctx = canvas.getContext('2d');
+
+let W, H, D, F;
+let state = 'ready';
+let score = 0;
+let remaining = 60;
+let type = 0;
+let elapsed = 0;
+let last = 0;
+let cooldown = 0;
+let hits = 0;
+let shots = 0;
+let joy = 0;
+let toastUntil = 0;
+let sound = false;
+let audio;
+
+const aim = { x: 0, y: 0 };
+const bird = { x: 0, y: 0, z: 11 };
+
+let projectiles = [];
+let particles = [];
+let faces = [];
+
+function resize() {
+  W = innerWidth;
+  H = innerHeight;
+  D = Math.min(devicePixelRatio || 1, 2);
+  canvas.width = W * D;
+  canvas.height = H * D;
+  ctx.setTransform(D, 0, 0, D, 0, 0);
+  F = Math.min(W * .98, H * .84);
+  aim.x = W / 2;
+  aim.y = H * .43;
+}
+
+addEventListener('resize', resize);
+resize();
+
+// Project a 3D point into the 2D canvas.
+function project(p) {
+  const z = p[2] + 6;
+  return [
+    W / 2 + p[0] * F / z,
+    H * .51 - (p[1] - 1.7) * F / z,
+    z
+  ];
+}
+
+function face(points, color) {
+  faces.push({
+    p: points,
+    c: color,
+    z: points.reduce((sum, p) => sum + p[2], 0) / points.length
+  });
+}
+
+function ellipsoid(
+  x, y, z, rx, ry, rz, color,
+  segments = 16, rings = 10
+) {
+  for (let j = 0; j < rings; j++) {
+    const a = -Math.PI / 2 + j * Math.PI / rings;
+    const b = a + Math.PI / rings;
+
+    for (let i = 0; i < segments; i++) {
+      const c = i * Math.PI * 2 / segments;
+      const d = c + Math.PI * 2 / segments;
+
+      const point = (latitude, longitude) => [
+        x + rx * Math.cos(latitude) * Math.cos(longitude),
+        y + ry * Math.sin(latitude),
+        z + rz * Math.cos(latitude) * Math.sin(longitude)
+      ];
+
+      const light = .76 + .24 * Math.max(
+        0,
+        Math.cos(c) * -.4 + Math.sin(a) * .8 - Math.sin(c) * .5
+      );
+
+      face(
+        [point(a, c), point(b, c), point(b, d), point(a, d)],
+        color.map(n => Math.round(n * light))
+      );
+    }
+  }
+}
+
+function box(x, y, z, rx, ry, rz, color) {
+  const points = [
+    [-rx, -ry, -rz], [rx, -ry, -rz],
+    [rx, ry, -rz], [-rx, ry, -rz],
+    [-rx, -ry, rz], [rx, -ry, rz],
+    [rx, ry, rz], [-rx, ry, rz]
+  ].map(p => [p[0] + x, p[1] + y, p[2] + z]);
+
+  [
+    [0, 1, 2, 3], [4, 7, 6, 5],
+    [0, 4, 5, 1], [3, 2, 6, 7],
+    [1, 5, 6, 2], [0, 3, 7, 4]
+  ].forEach((indices, i) => {
+    face(
+      indices.map(k => points[k]),
+      color.map(v => Math.round(v * (.7 + i * .05)))
+    );
+  });
+}
+
+function sushi(x, y, z, sushiType, size = .55) {
+  ellipsoid(
+    x, y, z,
+    size * .65, size * .22, size * .43,
+    [255, 245, 218], 10, 6
+  );
+
+  const toppings = [
+    [255, 126, 58],
+    [255, 176, 119],
+    [232, 71, 79]
+  ];
+
+  ellipsoid(
+    x, y + size * .23, z,
+    size * .76, size * .17, size * .48,
+    toppings[sushiType], 10, 6
+  );
+
+  if (sushiType === 1) {
+    ellipsoid(
+      x + size * .68, y + size * .18, z,
+      size * .28, size * .12, size * .28,
+      [242, 119, 69], 8, 4
+    );
+  } else {
+    for (let i = -1; i <= 1; i++) {
+      ellipsoid(
+        x + i * size * .32, y + size * .365, z,
+        size * .035, size * .013, size * .39,
+        [255, 213, 168], 6, 3
+      );
+    }
+  }
+}
+
+function pigeon() {
+  const { x, y, z } = bird;
+
+  ellipsoid(x, y + 2, z, 1.6, 2.05, 1.25, [229, 224, 204]);
+
+  ellipsoid(
+    x - 1.3, y + 1.65, z + .1,
+    .45, 1, .8, [199, 200, 189]
+  );
+  ellipsoid(
+    x + 1.3, y + 1.65, z + .1,
+    .45, 1, .8, [199, 200, 189]
+  );
+
+  ellipsoid(
+    x, y + 3.25, z - .16,
+    1.33, 1.25, 1.13, [243, 234, 212]
+  );
+
+  for (const side of [-1, 1]) {
+    ellipsoid(
+      x + side * .78, y + 3.48, z - 1.05,
+      .31, .39, .16, [17, 50, 65]
+    );
+    ellipsoid(
+      x + side * .78 - .065, y + 3.61, z - 1.21,
+      .09, .105, .035, [250, 255, 255], 8, 5
+    );
+  }
+
+  // Open mouth, upper beak, and lower beak.
+  ellipsoid(
+    x, y + 2.68, z - 1.29,
+    .78, .49, .31, [76, 35, 27]
+  );
+  ellipsoid(
+    x, y + 3.08, z - 1.43,
+    .87, .28, .53, [255, 193, 67]
+  );
+  ellipsoid(
+    x, y + 2.26 + joy * .08, z - 1.39,
+    .81, .19, .48, [249, 174, 48]
+  );
+
+  for (const side of [-1, 1]) {
+    ellipsoid(
+      x + side * .56, y + .13, z - .35,
+      .43, .15, .6, [247, 172, 65], 10, 5
+    );
+  }
+}
+
+function message(text) {
+  document.querySelector('#toast').textContent = text;
+  toastUntil = elapsed + 1.4;
+}
+
+function tone(hit) {
+  if (!sound) return;
+
+  audio ||= new (window.AudioContext || window.webkitAudioContext)();
+  audio.resume();
+
+  const oscillator = audio.createOscillator();
+  const gain = audio.createGain();
+
+  oscillator.connect(gain);
+  gain.connect(audio.destination);
+
+  oscillator.frequency.setValueAtTime(
+    hit ? 620 : 260, audio.currentTime
+  );
+  oscillator.frequency.exponentialRampToValueAtTime(
+    hit ? 1000 : 150, audio.currentTime + .12
+  );
+
+  gain.gain.setValueAtTime(.07, audio.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    .001, audio.currentTime + .2
+  );
+
+  oscillator.start();
+  oscillator.stop(audio.currentTime + .22);
+}
+
+function shoot() {
+  if (state !== 'playing' || cooldown > 0) return;
+
+  cooldown = .26;
+  shots++;
+
+  const depth = bird.z - 1.65;
+  const worldZ = depth + 6;
+  const target = [
+    (aim.x - W / 2) * worldZ / F,
+    1.7 + (H * .51 - aim.y) * worldZ / F,
+    depth
+  ];
+
+  projectiles.push({
+    start: [0, .5, -2],
+    target,
+    t: 0,
+    duration: .55,
+    type,
+    checked: false
+  });
+
+  tone(false);
+}
+
+canvas.addEventListener('pointermove', event => {
+  aim.x = event.clientX;
+  aim.y = event.clientY;
+});
+
+canvas.addEventListener('pointerdown', event => {
+  aim.x = event.clientX;
+  aim.y = event.clientY;
+  shoot();
+});
+
+addEventListener('keydown', event => {
+  if (event.code === 'Space') {
+    event.preventDefault();
+    shoot();
+  }
+
+  if (['1', '2', '3'].includes(event.key)) {
+    select(Number(event.key) - 1);
+  }
+});
+
+function select(n) {
+  type = n;
+
+  document.querySelectorAll('[data-type]').forEach(button => {
+    const selected = Number(button.dataset.type) === n;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+}
+
+document.querySelectorAll('[data-type]').forEach(button => {
+  button.onclick = () => select(Number(button.dataset.type));
+});
+
+document.querySelector('#mute').onclick = () => {
+  sound = !sound;
+  document.querySelector('#mute').textContent =
+    sound ? 'Sound on' : 'Sound off';
+  document.querySelector('#mute').setAttribute(
+    'aria-pressed', String(sound)
+  );
+};
+
+document.querySelector('#start').onclick = () => {
+  state = 'playing';
+  score = 0;
+  remaining = 60;
+  elapsed = 0;
+  shots = 0;
+  hits = 0;
+  cooldown = 0;
+  joy = 0;
+  bird.x = 0;
+  bird.y = 0;
+  projectiles = [];
+  particles = [];
+
+  document.querySelector('#overlay').style.display = 'none';
+  document.querySelector('#score').textContent = '0';
+  document.querySelector('#time').textContent = '60';
+  document.querySelector('#toast').textContent = '';
+
+  aim.x = W / 2;
+  aim.y = project([0, 2.68, 9.35])[1];
+};
+
+function finish() {
+  state = 'finished';
+  document.querySelector('#overlay').style.display = 'grid';
+  document.querySelector('#title').textContent = 'One happy pigeon.';
+
+  const accuracy = shots ? Math.round(hits / shots * 100) : 0;
+  document.querySelector('#intro').textContent =
+    `${score} points · ${hits} sushi eaten · ${accuracy}% accuracy. ` +
+    'The pigeon says coo!';
+
+  document.querySelector('#start').textContent = 'Play again';
+}
+
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, .035);
+  last = now;
+
+  if (state === 'playing') {
+    elapsed += dt;
+    remaining = Math.max(0, 60 - elapsed);
+    cooldown = Math.max(0, cooldown - dt);
+    joy = Math.max(0, joy - dt * 2);
+
+    // Three times the original movement speed.
+    bird.x = Math.sin(elapsed * 1.95) *
+      Math.min(1.9, .55 + elapsed * .023);
+    bird.y = Math.sin(elapsed * 6) * .12;
+
+    document.querySelector('#time').textContent =
+      String(Math.ceil(remaining));
+
+    if (remaining === 0) finish();
+  }
+
+  if (elapsed > toastUntil) {
+    document.querySelector('#toast').textContent = '';
+  }
+
+  const background = ctx.createLinearGradient(0, 0, 0, H);
+  background.addColorStop(0, '#10565d');
+  background.addColorStop(.62, '#397e78');
+  background.addColorStop(1, '#123e45');
+
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, W, H);
+  faces = [];
+
+  // Floor and perspective grid.
+  face(
+    [[-25, -.18, 2], [25, -.18, 2],
+     [25, -.18, 45], [-25, -.18, 45]],
+    [64, 118, 111]
+  );
+
+  for (let i = -12; i <= 12; i += 2) {
+    face(
+      [[i, -.17, 2], [i + .018, -.17, 2],
+       [i + .018, -.17, 40], [i, -.17, 40]],
+      [85, 140, 128]
+    );
+  }
+
+  for (let z = 3; z < 35; z += 3) {
+    face(
+      [[-25, -.16, z], [25, -.16, z],
+       [25, -.16, z + .02], [-25, -.16, z + .02]],
+      [85, 140, 128]
+    );
+  }
+
+  ellipsoid(
+    bird.x, -.10, bird.z,
+    1.65, .015, 1.2, [47, 84, 79]
+  );
+
+  box(0, -.42, 11, 3.4, .25, 2.4, [226, 199, 152]);
+  pigeon();
+
+  for (const p of projectiles) {
+    if (state === 'playing') p.t += dt / p.duration;
+    const t = p.t;
+
+    if (t >= 1 && !p.checked && state === 'playing') {
+      p.checked = true;
+
+      const dx = p.target[0] - bird.x;
+      const dy = p.target[1] - (bird.y + 2.68);
+      const inMouth =
+        dx * dx / (.85 * .85) + dy * dy / (.59 * .59) < 1;
+
+      if (inMouth) {
+        hits++;
+        score += 10;
+        joy = 1;
+
+        document.querySelector('#score').textContent = String(score);
+        message(
+          ['Delicious! +10', 'Coo! +10', 'Perfect bite! +10'][hits % 3]
+        );
+        tone(true);
+
+        for (let k = 0; k < 14; k++) {
+          particles.push({
+            x: bird.x,
+            y: bird.y + 2.8,
+            z: bird.z - 1.6,
+            vx: (Math.random() - .5) * 4,
+            vy: Math.random() * 3,
+            vz: (Math.random() - .5) * 3,
+            life: 1
+          });
+        }
+
+        p.hit = true;
+      } else {
+        message('A little closer to the beak!');
+      }
+    }
+
+    if (t < 1.3 && !p.hit) {
+      const a = p.start;
+      const b = p.target;
+
+      sushi(
+        a[0] + (b[0] - a[0]) * t,
+        a[1] + (b[1] - a[1]) * t +
+          Math.sin(Math.min(t, 1) * Math.PI) * .8 -
+          Math.max(0, t - 1) * 6,
+        a[2] + (b[2] - a[2]) * t,
+        p.type,
+        .5
+      );
+    }
+  }
+
+  projectiles = projectiles.filter(p => p.t < 1.3 && !p.hit);
+
+  for (const p of particles) {
+    p.life -= dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy -= 5 * dt;
+    p.z += p.vz * dt;
+
+    ellipsoid(
+      p.x, p.y, p.z,
+      .045, .045, .045, [255, 210, 102], 5, 3
+    );
+  }
+
+  particles = particles.filter(p => p.life > 0);
+
+  // Render the 3D mesh faces from back to front.
+  faces.sort((a, b) => b.z - a.z);
+
+  for (const f of faces) {
+    const points = f.p.map(project);
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], points[0][1]);
+
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(points[i][0], points[i][1]);
+    }
+
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${f.c.join(',')})`;
+    ctx.fill();
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = .4;
+    ctx.stroke();
+  }
+
+  if (state === 'playing') {
+    ctx.strokeStyle = '#fff4d9';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(aim.x, aim.y, 13, 0, Math.PI * 2);
+    ctx.moveTo(aim.x - 21, aim.y);
+    ctx.lineTo(aim.x - 8, aim.y);
+    ctx.moveTo(aim.x + 8, aim.y);
+    ctx.lineTo(aim.x + 21, aim.y);
+    ctx.moveTo(aim.x, aim.y - 21);
+    ctx.lineTo(aim.x, aim.y - 8);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff4d9';
+    ctx.beginPath();
+    ctx.arc(aim.x, aim.y, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
