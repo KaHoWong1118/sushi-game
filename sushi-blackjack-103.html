@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#261b17">
+<title>壽司 103：與師傅的對決</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+:root{color-scheme:light;--ink:#38271f;--cream:#fff5df;--red:#af392e;--gold:#d7b779}*{box-sizing:border-box}body{margin:0;color:var(--cream);font-family:system-ui,-apple-system,"PingFang TC",sans-serif;background:repeating-linear-gradient(92deg,#ffffff03 0 2px,transparent 2px 54px),linear-gradient(115deg,#38261d,#191512);min-height:100vh;min-height:100dvh}button{font:inherit;touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .2s}button:active{transform:scale(.96)}button:disabled{opacity:.4;cursor:default}button:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:4px}.app{max-width:520px;margin:auto;padding:18px 16px calc(185px + env(safe-area-inset-bottom))}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold)}h1{font-family:serif;font-size:25px;letter-spacing:2px;margin:5px 0}header p{margin:0;color:#c3afa0;font-size:12px}.seal{border:2px solid #cc6654;border-radius:8px;color:#ed9a83;transform:rotate(8deg);padding:8px;text-align:center;font-family:serif;font-size:17px;line-height:1.15}.table{padding:16px;background:#ffffff06;border:1px solid #d7b77933;border-radius:20px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.section-head h2{font-size:15px;margin:0}.score{font-size:25px;font-weight:800;font-variant-numeric:tabular-nums}.score small{font-size:12px;font-weight:400;color:#bdaa95}.cards{display:flex;gap:9px;overflow-x:auto;padding:15px 1px 9px;min-height:129px;scrollbar-width:thin;scrollbar-color:#b4936a transparent}.card{flex:0 0 86px;min-height:104px;background:linear-gradient(135deg,#fff9e9,#ecdabd);color:var(--ink);border:1px solid #f8e5c6;border-radius:12px;box-shadow:0 5px 10px #0003;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:7px 3px;text-align:center;position:relative}.card.new{animation:deal .4s ease-out}.emoji{font-size:32px;line-height:1.2}.name{font-size:10px;font-weight:700}.value{font-size:13px;color:#a53d2c;font-weight:800}.back{background:repeating-linear-gradient(45deg,#82382d 0 8px,#753228 8px 10px);color:#f7dfb4;border:2px solid #c69c66}.back .name{letter-spacing:4px}.board{padding:18px 8px;text-align:center;min-height:89px;display:flex;flex-direction:column;justify-content:center}.board p{margin:0;font-size:16px;font-weight:700;color:#f1d6a2}.board small{margin-top:6px;color:#bca794;font-size:11px}.player{background:#fff8e908}.progress{height:7px;background:#0004;border-radius:99px;margin:10px 0 2px;overflow:hidden}.bar{height:100%;width:0;background:#75ab78;transition:width .4s,background-color .4s;border-radius:99px}.hint{font-size:11px;color:#bda993;margin:8px 0 0}.controls{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(0deg,#211915 88%,#21191500);padding:22px 16px calc(12px + env(safe-area-inset-bottom));z-index:5}.control-inner{max-width:488px;margin:auto}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.primary,.secondary,.again{min-height:57px;border-radius:13px;font-weight:800;border:1px solid #cc7961}.primary{background:var(--red);color:#fff7e7;box-shadow:0 4px 0 #74291f}.secondary{background:#f1dfbc;color:#493126;border-color:#f1dfbc;box-shadow:0 4px 0 #ac9571}.reset{display:block;background:none;border:0;color:#c7b49f;margin:10px auto 0;min-height:40px;font-size:12px}.sub{display:block;font-size:9px;letter-spacing:2px;opacity:.7;margin-top:3px}details{margin-top:18px;font-size:12px;color:#c7b49f;line-height:1.8}summary{cursor:pointer;min-height:35px}.menu{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-top:8px}.menu span{border-bottom:1px solid #ffffff10;padding:5px 0}.overlay{position:fixed;inset:0;background:#100c0bcc;z-index:20;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(6px)}[hidden]{display:none!important}.result{max-width:390px;width:100%;max-height:90vh;overflow:auto;background:var(--cream);color:var(--ink);border:3px double #b58b50;border-radius:24px;padding:27px 22px;text-align:center;box-shadow:0 25px 90px #0008;animation:deal .4s}.result-icon{font-size:62px}.result h2{font-family:serif;font-size:24px;line-height:1.55;margin:12px 0}.result p{font-size:14px;line-height:1.8}.totals{background:#eadbc0;border-radius:12px;padding:12px;font-weight:800}.again{width:100%;background:var(--red);color:white;margin-top:18px}.inspect{border:0;background:none;color:#805f44;min-height:44px;margin-top:6px}.flash{position:fixed;inset:0;pointer-events:none;z-index:15;background:#ed3e35;animation:flash .5s both}.shake{animation:shake .4s}@keyframes deal{from{opacity:0;transform:translateY(12px) rotateY(85deg)}to{opacity:1;transform:none}}@keyframes flash{from{opacity:.35}to{opacity:0}}@keyframes shake{25%,75%{transform:translateX(-5px)}50%{transform:translateX(5px)}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}@media(max-width:350px){.app{padding-left:10px;padding-right:10px}h1{font-size:21px}.table{padding:12px}.primary,.secondary{font-size:14px}}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+<header><div><div class="eyebrow">SUSHI BLACKJACK · BIRTHDAY EDITION</div><h1>壽司 103</h1><p>與師傅的對決 · 今晚，你係主角。</p></div><div class="seal">十月<br>三日</div></header>
+<section class="table" aria-label="壽司師傅吧台"><div class="section-head"><h2>👨‍🍳 壽司師傅</h2><div class="score" id="dealerScore"></div></div><div class="cards" id="dealerCards"></div><p class="hint" id="dealerHint">明牌點數 · 暗牌尚未揭開</p></section>
+<div class="board" role="status" aria-live="polite"><p id="message"></p><small id="detail"></small></div>
+<section class="table player" aria-label="你的手牌"><div class="section-head"><h2>😋 你的盤子</h2><div class="score"><span id="playerScore">0</span> <small>/ 103</small></div></div><div class="progress" role="progressbar" aria-label="當前飽食度" aria-valuemin="0" aria-valuemax="103" aria-valuenow="0" id="progress"><div class="bar" id="bar"></div></div><div class="cards" id="playerCards"></div><p class="hint" id="playerHint"></p></section>
+<details><summary>🥢 本日菜單與對決規則</summary><div class="menu" id="menu"></div><p>每次從 12 款料理等機率隨機抽取，可重複。開局各 2 張；師傅第二張先蓋牌。停手後，師傅未滿 90 必抽，90–103 停手。超過 103 爆肚，同分平手；你剛好 103 立即獲勝。</p><p>生日卷先算 10，必要時每張改算 3，盡量保留不爆肚的最高分。綠茶在抽到時減 6，最低為 0；每次抽牌會重新評估生日卷。多張生日卷同樣適用。</p></details>
+</main>
+<footer class="controls"><div class="control-inner"><div class="actions"><button class="primary" id="hit">食多件 🍣<span class="sub">HIT</span></button><button class="secondary" id="stand">飽啦埋單 🛑<span class="sub">STAND</span></button></div><button class="reset" id="reset">重新開局 🔄</button></div></footer>
+<div class="overlay" id="overlay" hidden><section class="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle" aria-describedby="resultText" tabindex="-1" id="dialog"><div class="eyebrow" style="color:#9b7544">SPECIAL FOR YOU · 10 / 03</div><div class="result-icon" id="resultIcon"></div><h2 id="resultTitle"></h2><p id="resultText"></p><div class="totals" id="totals"></div><button class="again" id="again">再同師傅食過 🍣</button><button class="inspect" id="inspect">睇返今局手牌</button></section></div>
+<script>
+'use strict';
+const MENU=[
+ {emoji:'🫛',name:'鹽煮枝豆',value:3},
+ {emoji:'🍳',name:'厚燒玉子',value:5},
+ {emoji:'🥒',name:'青瓜細卷',value:7},
+ {emoji:'🍣',name:'鮮三文魚',value:10},
+ {emoji:'🦐',name:'甜蝦握壽司',value:12},
+ {emoji:'🐚',name:'北海道帆立貝',value:15},
+ {emoji:'🐙',name:'醬汁八爪魚',value:8},
+ {emoji:'🦔',name:'馬糞海膽軍艦',value:18},
+ {emoji:'🐟',name:'特上大拖羅',value:25},
+ {emoji:'🥩',name:'炙燒 A5 和牛',value:32},
+ {emoji:'🎂',name:'103 生日特上卷',value:10,ace:true},
+ {emoji:'🍵',name:'解膩熱綠茶',value:-6}
+];
+const $=id=>document.getElementById(id);
+let player=[],dealer=[],phase='player',revealed=false,version=0,timers=new Set(),partyTimer=null;
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function vibrate(pattern){try{if(navigator.vibrate)navigator.vibrate(pattern)}catch(e){}}
+// 動態規劃保留所有生日卷組合，並按抽牌順序處理綠茶的零分下限。
+function score(hand){
+ let states=new Map([[0,[]]]);
+ for(const card of hand){
+  const next=new Map();
+  for(const [total,values] of states){
+   for(const value of card.ace?[10,3]:[card.value]){
+    const sum=Math.max(0,total+value);
+    if(!next.has(sum))next.set(sum,values.concat(value));
+   }
+  }
+  states=next;
+ }
+ const totals=[...states.keys()],safe=totals.filter(n=>n<=103);
+ const total=safe.length?Math.max(...safe):Math.min(...totals);
+ return {total,values:states.get(total)};
+}
+function draw(){return {...MENU[Math.floor(Math.random()*MENU.length)]}}
+function later(fn,ms){const current=version;const id=setTimeout(()=>{timers.delete(id);if(current===version)fn()},ms);timers.add(id)}
+function renderCards(id,hand,hide,newIndex){
+ const root=$(id),result=score(hide?hand.slice(0,1):hand);root.replaceChildren();
+ hand.forEach((card,i)=>{
+  const el=document.createElement('div');el.className='card'+(hide&&i===1?' back':'')+(i===newIndex?' new':'');
+  if(hide&&i===1){el.innerHTML='<span class="emoji">🎴</span><span class="name">暗牌</span><span class="value" style="color:inherit">?</span>';el.setAttribute('aria-label','師傅暗牌，尚未揭開')}
+  else{const value=result.values[i];el.innerHTML='<span class="emoji">'+card.emoji+'</span><span class="name">'+card.name+'</span><span class="value">'+(value>0?'+':'')+value+(card.ace?' ✦':'')+'</span>'}
+  root.appendChild(el);
+ });
+ if(newIndex!==undefined)root.scrollLeft=root.scrollWidth;
+}
+function render(who,index){
+ const p=score(player).total,d=score(revealed?dealer:dealer.slice(0,1)).total;
+ $('playerScore').textContent=p;$('dealerScore').innerHTML=d+' <small>'+(revealed?'/ 103':'+ ?')+'</small>';
+ $('dealerHint').textContent=revealed?'師傅總分 · 未滿 90 必須繼續抽牌':'明牌點數 · 暗牌尚未揭開';
+ $('playerHint').textContent=p>103?'爆肚啦！下次記得留肚。':'距離生日目標仲有 '+(103-p)+' 點';
+ $('bar').style.width=Math.min(100,p/103*100)+'%';$('bar').style.backgroundColor='hsl('+Math.max(0,120*(1-p/103))+', 60%, 53%)';
+ $('progress').setAttribute('aria-valuenow',Math.min(103,p));$('progress').setAttribute('aria-valuetext',p+' / 103'+(p>103?'，爆肚':''));
+ renderCards('playerCards',player,false,who==='player'?index:undefined);renderCards('dealerCards',dealer,!revealed,who==='dealer'?index:undefined);
+ $('hit').disabled=phase!=='player';$('stand').disabled=phase!=='player';
+}
+function say(message,detail){$('message').textContent=message;$('detail').textContent=detail}
+function stopParty(){if(partyTimer!==null){clearInterval(partyTimer);partyTimer=null}if(typeof window.confetti==='function')window.confetti.reset()}
+function celebrate(){
+ if(typeof window.confetti!=='function')return;
+ const fire=()=>{try{window.confetti({particleCount:reduced?30:65,spread:75,origin:{x:.15,y:.6},zIndex:100,disableForReducedMotion:true});window.confetti({particleCount:reduced?30:65,spread:75,origin:{x:.85,y:.6},zIndex:100,disableForReducedMotion:true})}catch(e){}};
+ fire();if(!reduced){partyTimer=setInterval(fire,450);later(()=>{clearInterval(partyTimer);partyTimer=null},3200)}
+}
+function closeResult(){ $('overlay').hidden=true;$('app').inert=false;document.querySelector('.controls').inert=false;$('reset').focus() }
+function finish(outcome,perfect=false){
+ phase='over';revealed=true;render();const p=score(player).total,d=score(dealer).total;
+ const win=outcome==='win',tie=outcome==='draw';
+ $('resultIcon').textContent=win?'🎂':tie?'🍵':'💥';
+ $('resultTitle').textContent=win?'🎉 神之胃袋！10月3日壽司大胃王！🎉':tie?'🍵 不分高下！呢餐打和！':'💥 食到走唔郁！（當前 '+p+' 點 vs 師傅 '+d+' 點）';
+ $('resultText').textContent=win?'生日快樂！今晚成功擊敗壽司師傅，103% 好運值拉滿！':tie?'同師傅一樣咁好胃口，再開一局分勝負！':p>103?'眼闊肚窄添！喝口茶，下一局再挑戰師傅。':'師傅今次略勝一籌，留返啲胃口再戰！';
+ $('totals').textContent='你 '+p+'　／　師傅 '+d;
+ $('again').textContent=win?'再同師傅食過 🍣':tie?'再開一局 🔄':'喝口茶再來一局 🍵';
+ say(perfect?'天胡！103 點生日傳說！':win?(d>103?'師傅爆肚！你贏啦！':'你成功戰勝師傅！'):tie?'平手！一齊飲杯茶。':p>103?'你爆肚啦！':'師傅勝出！','今局已結束 · 可以重新開局');
+ $('overlay').hidden=false;$('app').inert=true;document.querySelector('.controls').inert=true;$('again').focus();
+ if(win){vibrate([40,50,40]);celebrate()}else if(!tie){vibrate([90,45,90]);if(!reduced){const flash=document.createElement('div');flash.className='flash';document.body.appendChild(flash);$('app').classList.add('shake');later(()=>{flash.remove();$('app').classList.remove('shake')},500)}}
+}
+function hit(){
+ if(phase!=='player')return;vibrate(15);player.push(draw());render('player',player.length-1);
+ const p=score(player).total;if(p===103)return finish('win',true);if(p>103)return finish('lose');
+ phase='dealing';$('hit').disabled=true;$('stand').disabled=true;
+ say('上菜！'+player[player.length-1].name,p>=90?'好接近喇！繼續食，定係埋單？':'慢慢食，記住留返啲位。');
+ later(()=>{phase='player';$('hit').disabled=false;$('stand').disabled=false},400);
+}
+function dealerStep(){
+ if(phase!=='dealer')return;
+ const d=score(dealer).total,p=score(player).total;
+ if(d>103)return finish('win');
+ if(d>=90)return finish(p>d?'win':p===d?'draw':'lose');
+ say('師傅思考中...','未滿 90 點，師傅必須再食一件');
+ later(()=>{dealer.push(draw());render('dealer',dealer.length-1);say('師傅食咗 '+dealer[dealer.length-1].name,'師傅目前 '+score(dealer).total+' 點');later(dealerStep,700)},650);
+}
+function stand(){if(phase!=='player')return;vibrate(15);phase='dealer';revealed=true;render();say('你選擇埋單','暗牌揭曉 · 輪到師傅');later(dealerStep,750)}
+function reset(){
+ version++;timers.forEach(clearTimeout);timers.clear();stopParty();document.querySelectorAll('.flash').forEach(el=>el.remove());$('app').classList.remove('shake');
+ $('overlay').hidden=true;$('app').inert=false;document.querySelector('.controls').inert=false;
+ phase='player';revealed=false;player=[draw(),draw()];dealer=[draw(),draw()];render();
+ say('いらっしゃいませ！請慢用 🍣','接近 103，贏過師傅 · 剛好 103 即刻獲勝');
+}
+$('menu').innerHTML=MENU.map(c=>'<span>'+c.emoji+' '+c.name+' <b>'+(c.ace?'3 / 10':c.value>0?'+'+c.value:c.value)+'</b></span>').join('');
+$('hit').addEventListener('click',hit);$('stand').addEventListener('click',stand);$('reset').addEventListener('click',()=>{reset();vibrate(15)});$('again').addEventListener('click',()=>{reset();$('hit').focus()});$('inspect').addEventListener('click',closeResult);
+document.addEventListener('keydown',e=>{if($('overlay').hidden)return;if(e.key==='Escape'){closeResult();return}if(e.key==='Tab'){const first=$('again'),last=$('inspect');if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+reset();
+</script>
+</body>
+</html>
